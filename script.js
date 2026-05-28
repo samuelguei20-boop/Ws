@@ -1,18 +1,30 @@
 const navItems = document.querySelectorAll(".nav-item");
 const pages = document.querySelectorAll(".page");
 
+const balanceText = document.getElementById("balanceText");
+const cfaText = document.getElementById("cfaText");
+const rewardBalance = document.getElementById("rewardBalance");
+
+let mainBalance = 0;
+let rewardAmount = 0;
+let visible = true;
+let currentStream = null;
+
+/* NAVIGATION */
+
 navItems.forEach(btn=>{
 
 btn.addEventListener("click",()=>{
 
-pages.forEach(page=>
-page.classList.remove("active-page"));
+pages.forEach(page=>{
+page.classList.remove("active-page");
+});
 
-navItems.forEach(nav=>
-nav.classList.remove("active-nav"));
+navItems.forEach(nav=>{
+nav.classList.remove("active-nav");
+});
 
-const pageId =
-btn.getAttribute("data-page");
+const pageId = btn.getAttribute("data-page");
 
 document
 .getElementById(pageId)
@@ -24,44 +36,52 @@ btn.classList.add("active-nav");
 
 });
 
-let visible = true;
+/* UPDATE BALANCE */
+
+function updateBalance(){
+
+if(visible){
+
+balanceText.innerText = mainBalance;
+
+cfaText.innerText = `≈ ${mainBalance} FCFA`;
+
+}else{
+
+balanceText.innerText = "••••";
+
+cfaText.innerText = "≈ ••••";
+
+}
+
+}
+
+/* BALANCE SHOW */
 
 const toggleBalance =
 document.getElementById("toggleBalance");
 
 toggleBalance.addEventListener("click",()=>{
 
-const balance =
-document.getElementById("balanceText");
-
-const cfa =
-document.getElementById("cfaText");
-
 visible = !visible;
 
 if(visible){
-
-balance.innerText =
-balance.dataset.real || "0";
-
-cfa.innerText =
-`≈ ${balance.dataset.real || 0} FCFA`;
 
 toggleBalance.innerHTML =
 '<i class="fa-regular fa-eye"></i>';
 
 }else{
 
-balance.innerText = "••••";
-
-cfa.innerText = "≈ ••••";
-
 toggleBalance.innerHTML =
 '<i class="fa-regular fa-eye-slash"></i>';
 
 }
 
+updateBalance();
+
 });
+
+/* DARK MODE */
 
 const themeToggle =
 document.getElementById("themeToggle");
@@ -84,9 +104,9 @@ themeToggle.innerHTML =
 
 });
 
-let xp = 0;
+/* XP */
 
-function updateXP(){
+let xp = 0;
 
 document
 .getElementById("xpFill")
@@ -96,57 +116,57 @@ document
 .getElementById("levelPercent")
 .innerText = xp + "%";
 
-let badge =
-document.getElementById("levelBadge");
+/* MODAL */
 
-let levelText =
-document.getElementById("levelName");
+const modal =
+document.getElementById("mainModal");
 
-if(xp <= 15){
+const modalContent =
+document.getElementById("modalContent");
 
-badge.innerHTML = "🥉 Bronze";
-levelText.innerHTML = "Niveau 1";
+function openModal(content){
 
-}
+modal.style.display = "flex";
 
-else if(xp <= 30){
-
-badge.innerHTML = "🥈 Silver";
-levelText.innerHTML = "Niveau 2";
+modalContent.innerHTML = content;
 
 }
 
-else if(xp <= 45){
+function stopCamera(){
 
-badge.innerHTML = "🥇 Gold";
-levelText.innerHTML = "Niveau 3";
+if(currentStream){
 
-}
+currentStream
+.getTracks()
+.forEach(track=>track.stop());
 
-else if(xp <= 50){
-
-badge.innerHTML = "💎 Premium";
-levelText.innerHTML = "Niveau 4";
-
-}
-
-else if(xp <= 60){
-
-badge.innerHTML = "🔥 Pro";
-levelText.innerHTML = "Niveau 5";
-
-}
-
-else{
-
-badge.innerHTML = "👑 Super Pro";
-levelText.innerHTML = "Niveau MAX";
+currentStream = null;
 
 }
 
 }
 
-updateXP();
+function closeModal(){
+
+modal.style.display = "none";
+
+stopCamera();
+
+}
+
+window.closeModal = closeModal;
+
+window.addEventListener("click",(e)=>{
+
+if(e.target === modal){
+
+closeModal();
+
+}
+
+});
+
+/* COPY REFERRAL */
 
 const copyBtn =
 document.getElementById("copyReferral");
@@ -170,35 +190,41 @@ copyBtn.innerText =
 
 });
 
-const modal =
-document.getElementById("mainModal");
+/* COPY REFERRAL SETTINGS */
 
-const modalContent =
-document.getElementById("modalContent");
+document
+.getElementById("copyReferral2")
+.addEventListener("click",()=>{
 
-function openModal(content){
+navigator.clipboard.writeText(
+"https://bccfuture.com/ref/BCC20458"
+);
 
-modal.style.display = "flex";
+openModal(`
 
-modalContent.innerHTML = content;
+<h2>
+✅ Lien copié
+</h2>
 
-}
+<p style="margin-top:15px">
 
-function closeModal(){
+Votre lien de parrainage
+a été copié.
 
-modal.style.display = "none";
+</p>
 
-}
+<button class="close-btn"
+onclick="closeModal()">
 
-window.addEventListener("click",(e)=>{
+Fermer
 
-if(e.target === modal){
+</button>
 
-closeModal();
-
-}
+`);
 
 });
+
+/* MISSIONS */
 
 document
 .querySelectorAll(".mission-btn")
@@ -208,7 +234,9 @@ btn.addEventListener("click",()=>{
 
 openModal(`
 
-<h2>🎯 ${btn.innerText}</h2>
+<h2>
+🎯 ${btn.innerText}
+</h2>
 
 <p style="margin-top:10px">
 💰 Gain : 0 BCC
@@ -219,11 +247,10 @@ openModal(`
 </p>
 
 <p style="margin-top:10px">
-📋 Conditions : mission admin.
+📋 Conditions : mission admin
 </p>
 
 <button class="main-btn"
-id="startMissionBtn"
 style="width:100%;margin-top:20px">
 
 COMMENCER
@@ -239,49 +266,11 @@ Fermer
 
 `);
 
-setTimeout(()=>{
-
-const startBtn =
-document.getElementById("startMissionBtn");
-
-if(startBtn){
-
-startBtn.addEventListener("click",()=>{
-
-if(xp < 100){
-
-xp += 0.5;
-
-updateXP();
-
-}
-
-openModal(`
-
-<h2>
-✅ Mission démarrée
-</h2>
-
-<p style="margin-top:15px">
-XP ajouté avec succès.
-</p>
-
-<button class="close-btn"
-onclick="closeModal()">
-Fermer
-</button>
-
-`);
-
-});
-
-}
-
-},100);
-
 });
 
 });
+
+/* SEND */
 
 document
 .getElementById("sendBtn")
@@ -289,17 +278,23 @@ document
 
 openModal(`
 
-<h2>📤 Envoyer BCC</h2>
+<h2>
+📤 Envoyer BCC
+</h2>
 
-<input placeholder="ID BCC destinataire">
+<input id="sendId"
+placeholder="ID BCC destinataire">
 
-<input placeholder="Montant BCC">
+<input id="sendAmount"
+type="number"
+placeholder="Montant BCC">
 
 <p style="margin-top:15px">
 Frais : 1%
 </p>
 
 <button class="main-btn"
+id="confirmSendBtn"
 style="width:100%;margin-top:20px">
 
 Confirmer
@@ -315,7 +310,79 @@ Fermer
 
 `);
 
+setTimeout(()=>{
+
+const confirmBtn =
+document.getElementById("confirmSendBtn");
+
+confirmBtn.addEventListener("click",()=>{
+
+const amount =
+parseFloat(
+document.getElementById("sendAmount").value
+);
+
+if(!amount || amount <= 0){
+
+alert("Montant invalide");
+return;
+
+}
+
+if(amount > mainBalance){
+
+alert("Solde insuffisant");
+return;
+
+}
+
+const fees = amount * 0.01;
+
+mainBalance =
+mainBalance - amount - fees;
+
+if(mainBalance < 0){
+mainBalance = 0;
+}
+
+updateBalance();
+
+openModal(`
+
+<h2>
+✅ Transfert effectué
+</h2>
+
+<p style="margin-top:15px">
+
+Montant envoyé :
+${amount} BCC
+
+</p>
+
+<p style="margin-top:10px">
+
+Frais :
+${fees.toFixed(2)} BCC
+
+</p>
+
+<button class="close-btn"
+onclick="closeModal()">
+
+Fermer
+
+</button>
+
+`);
+
 });
+
+},100);
+
+});
+
+/* RECEIVE */
 
 document
 .getElementById("receiveBtn")
@@ -323,7 +390,9 @@ document
 
 openModal(`
 
-<h2>📥 Recevoir</h2>
+<h2>
+📥 Recevoir
+</h2>
 
 <div class="receive-id-box">
 
@@ -332,7 +401,7 @@ BCC20458
 </div>
 
 <button class="main-btn"
-id="copyIDBtn"
+id="copyIdBtn"
 style="width:100%;margin-top:20px">
 
 Copier ID
@@ -351,16 +420,22 @@ Fermer
 setTimeout(()=>{
 
 document
-.getElementById("copyIDBtn")
+.getElementById("copyIdBtn")
 .addEventListener("click",()=>{
 
-navigator.clipboard.writeText("BCC20458");
+navigator.clipboard.writeText(
+"BCC20458"
+);
+
+alert("ID copié");
 
 });
 
 },100);
 
 });
+
+/* SCANNER */
 
 document
 .getElementById("scanBtn")
@@ -378,11 +453,16 @@ facingMode:"environment"
 }
 });
 
+currentStream = stream;
+
 openModal(`
 
-<h2>📷 Scanner QR</h2>
+<h2>
+📷 Scanner QR
+</h2>
 
-<video id="scannerVideo"
+<video
+id="scannerVideo"
 autoplay
 playsinline
 style="
@@ -391,10 +471,12 @@ height:260px;
 border-radius:20px;
 margin-top:20px;
 background:black;
-"></video>
+object-fit:cover;
+">
+</video>
 
 <button class="close-btn"
-id="closeScannerBtn">
+onclick="closeModal()">
 
 Fermer
 
@@ -407,23 +489,17 @@ document.getElementById("scannerVideo");
 
 video.srcObject = stream;
 
-document
-.getElementById("closeScannerBtn")
-.addEventListener("click",()=>{
-
-stream.getTracks().forEach(track=>track.stop());
-
-closeModal();
-
-});
-
 }catch(error){
 
-alert("Caméra refusée");
+alert(
+"Accès caméra refusé"
+);
 
 }
 
 });
+
+/* CONVERT */
 
 document
 .getElementById("convertBtn")
@@ -431,7 +507,9 @@ document
 
 openModal(`
 
-<h2>🔄 Convertir</h2>
+<h2>
+🔄 Convertir
+</h2>
 
 <select>
 
@@ -455,7 +533,8 @@ Moov Money
 
 <input placeholder="Numéro mobile money">
 
-<input placeholder="Montant">
+<input type="number"
+placeholder="Montant">
 
 <button class="main-btn"
 style="width:100%;margin-top:20px">
@@ -475,17 +554,21 @@ Fermer
 
 });
 
+/* NOTIFICATION */
+
 document
 .querySelector(".notif-btn")
 .addEventListener("click",()=>{
 
 openModal(`
 
-<h2>🔔 Notifications</h2>
+<h2>
+🔔 Notifications
+</h2>
 
 <p style="margin-top:15px">
 
-Aucune notification administrateur
+Aucune notification admin
 
 </p>
 
@@ -500,13 +583,17 @@ Fermer
 
 });
 
+/* MISSION DAY */
+
 document
 .querySelector(".center-btn")
 .addEventListener("click",()=>{
 
 openModal(`
 
-<h2>🔥 Mission du jour</h2>
+<h2>
+🔥 Mission du jour
+</h2>
 
 <p style="margin-top:15px">
 
@@ -525,6 +612,8 @@ Fermer
 
 });
 
+/* SCRATCH CARD */
+
 document
 .getElementById("scratchCard")
 .addEventListener("click",()=>{
@@ -539,26 +628,66 @@ Math.random()*gains.length
 )
 ];
 
+rewardAmount += gain;
+
+rewardBalance.innerText =
+rewardAmount + " BCC";
+
 document
 .getElementById("scratchCard")
 .innerHTML =
 `🎉 ${gain} BCC GAGNÉS`;
 
-let reward =
-parseInt(
-document
-.getElementById("rewardBalance")
-.innerText
-) || 0;
+});
 
-reward += gain;
+/* TRANSFER REWARD */
 
 document
-.getElementById("rewardBalance")
-.innerText =
-reward + " BCC";
+.getElementById("transferRewardBtn")
+.addEventListener("click",()=>{
+
+if(rewardAmount <= 0){
+
+alert("Aucune récompense");
+
+return;
+
+}
+
+mainBalance += rewardAmount;
+
+rewardAmount = 0;
+
+rewardBalance.innerText =
+"0 BCC";
+
+updateBalance();
+
+openModal(`
+
+<h2>
+✅ Récompenses transférées
+</h2>
+
+<p style="margin-top:15px">
+
+Le solde principal
+a été mis à jour.
+
+</p>
+
+<button class="close-btn"
+onclick="closeModal()">
+
+Fermer
+
+</button>
+
+`);
 
 });
+
+/* LEVELS */
 
 document
 .getElementById("levelBadge")
@@ -566,7 +695,9 @@ document
 
 openModal(`
 
-<h2>🏆 Niveaux BCC</h2>
+<h2>
+🏆 Niveaux BCC
+</h2>
 
 <div style="
 margin-top:20px;
@@ -612,107 +743,6 @@ Fermer
 
 });
 
-document
-.getElementById("transferRewardBtn")
-.addEventListener("click",()=>{
+/* INIT */
 
-let reward =
-parseInt(
-document
-.getElementById("rewardBalance")
-.innerText
-) || 0;
-
-let balance =
-parseInt(
-document
-.getElementById("balanceText")
-.dataset.real || 0
-);
-
-balance += reward;
-
-document
-.getElementById("balanceText")
-.dataset.real = balance;
-
-document
-.getElementById("balanceText")
-.innerText = balance;
-
-document
-.getElementById("cfaText")
-.innerText =
-`≈ ${balance} FCFA`;
-
-document
-.getElementById("rewardBalance")
-.innerText =
-"0 BCC";
-
-openModal(`
-
-<h2>
-✅ Récompenses transférées
-</h2>
-
-<p style="margin-top:15px">
-
-Les récompenses ont été envoyées
-vers le solde principal.
-
-</p>
-
-<button class="close-btn"
-onclick="closeModal()">
-
-Fermer
-
-</button>
-
-`);
-
-});
-
-document
-.getElementById("copyReferral2")
-.addEventListener("click",()=>{
-
-navigator.clipboard.writeText(
-"https://bccfuture.com/ref/BCC20458"
-);
-
-openModal(`
-
-<h2>
-✅ Lien copié
-</h2>
-
-<p style="margin-top:15px">
-
-Votre lien de parrainage
-a été copié.
-
-</p>
-
-<button class="close-btn"
-onclick="closeModal()">
-
-Fermer
-
-</button>
-
-`);
-
-});
-
-document
-.getElementById("kycUpload")
-.addEventListener("change",()=>{
-
-document
-.querySelector(".kyc-status")
-.innerHTML =
-"📤 Document envoyé à l'administration";
-
-});
+updateBalance();
